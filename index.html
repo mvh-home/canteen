@@ -1,434 +1,356 @@
-import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft, User, CheckCircle2, GraduationCap, Utensils, Clock, Receipt } from 'lucide-react';
-
-// Unified menu data extracted from both images
-const MENU_CATEGORIES = ["All", "Hot Food", "Recess & Snacks", "Sandwiches & Salads", "Drinks & Frozen", "Combos & Specials"];
-
-const MENU_ITEMS = [
-  // From visual menu (Cheese Toasties.jpg)
-  { id: 'v1', name: 'Beef Patties Cheese Burger', price: 6.00, category: 'Hot Food', emoji: '🍔', desc: 'Double beef patties and cheese' },
-  { id: 'v2', name: 'Cheese Toasties', price: 3.00, category: 'Recess & Snacks', emoji: '🥪', desc: 'Warm melted cheese sandwich' },
-  { id: 'v3', name: '5 Chicken Fingers & 6 Potato Gems', price: 6.00, category: 'Combos & Specials', emoji: '🍗', desc: 'Crispy chicken and potato gems' },
-  { id: 'v4', name: 'Pizza Pockets', price: 3.50, category: 'Hot Food', emoji: '🍕', desc: 'Ham or Ham & Pineapple' },
-  { id: 'v5', name: 'Fish Fillets & 6 Potato Gems', price: 6.00, category: 'Combos & Specials', emoji: '🐟', desc: 'Crumbed fish fillets with gems' },
-  { id: 'v6', name: '4 Fish Fingers & 6 Potato Gems', price: 5.00, category: 'Combos & Specials', emoji: '🍟', desc: 'Perfect kid-sized fish meal' },
-  
-  // From table menu (B 81012113.jpg)
-  { id: 't1', name: 'Hot Dog', price: 5.00, category: 'Hot Food', emoji: '🌭' },
-  { id: 't2', name: 'Sausage Roll', price: 5.50, category: 'Hot Food', emoji: '🥐' },
-  { id: 't3', name: 'Large Pie', price: 5.50, category: 'Hot Food', emoji: '🥧' },
-  { id: 't4', name: 'Macaroni and Cheese', price: 6.00, category: 'Hot Food', emoji: '🧀' },
-  { id: 't5', name: 'Lasagne', price: 6.00, category: 'Hot Food', emoji: '🍝' },
-  { id: 't6', name: 'Hash Brown', price: 1.00, category: 'Recess & Snacks', emoji: '🥔' },
-  { id: 't7', name: 'Garlic Bread', price: 1.00, category: 'Recess & Snacks', emoji: '🥖' },
-  { id: 't8', name: 'PopCorn', price: 2.00, category: 'Recess & Snacks', emoji: '🍿' },
-  { id: 't9', name: 'Red Rock Deli Chips', price: 2.00, category: 'Recess & Snacks', emoji: '🥨' },
-  { id: 't10', name: 'Water 600ml', price: 2.00, category: 'Drinks & Frozen', emoji: '💧' },
-  { id: 't11', name: 'Flavoured Milk 250ml', price: 2.50, category: 'Drinks & Frozen', emoji: '🥛' },
-  { id: 't12', name: 'Juice Assorted 200ml', price: 2.50, category: 'Drinks & Frozen', emoji: '🧃' },
-  { id: 't13', name: 'Zooper Doopers', price: 1.00, category: 'Drinks & Frozen', emoji: '🧊' },
-  { id: 't14', name: 'Salad Box', price: 6.00, category: 'Sandwiches & Salads', emoji: '🥗', desc: 'Lettuce, cucumber, carrot, tomato' },
-  { id: 't15', name: 'Vegemite Sandwich', price: 3.00, category: 'Sandwiches & Salads', emoji: '🍞' },
-  { id: 't16', name: 'MONDAY Special', price: 7.50, category: 'Combos & Specials', emoji: '🍕', desc: 'Pizza and Water' },
-  { id: 't17', name: 'FRIDAY Special', price: 5.50, category: 'Combos & Specials', emoji: '🍗', desc: 'Nuggets (4) and Water' },
-  
-  // Newly added items from tabular menu
-  { id: 'n1', name: 'Hot Noodles (Chicken/Beef)', price: 4.00, category: 'Hot Food', emoji: '🍜', desc: 'Note: water drained from noodles' },
-  { id: 'n2', name: 'Juice Cups', price: 2.00, category: 'Drinks & Frozen', emoji: '🧃' },
-  { id: 'n3', name: 'Jelly Sticks', price: 0.20, category: 'Drinks & Frozen', emoji: '🧊' },
-  { id: 'n4', name: 'Fruit Puddings', price: 0.60, category: 'Drinks & Frozen', emoji: '🍮' },
-  { id: 'n5', name: 'Moosies', price: 2.00, category: 'Drinks & Frozen', emoji: '🐮' },
-  { id: 'n6', name: 'Ice Cream Cups 99% Fat Free', price: 2.00, category: 'Drinks & Frozen', emoji: '🍨' },
-  { id: 'n7', name: 'Juiceys', price: 2.00, category: 'Drinks & Frozen', emoji: '🧊' },
-  { id: 'n8', name: 'Butter Sandwich', price: 2.00, category: 'Sandwiches & Salads', emoji: '🍞', desc: 'Wholemeal' },
-  { id: 'n9', name: 'Cheese Sandwich', price: 3.00, category: 'Sandwiches & Salads', emoji: '🧀', desc: 'Wholemeal' },
-  { id: 'n10', name: 'Salad Sandwich', price: 6.00, category: 'Sandwiches & Salads', emoji: '🥗', desc: 'Wholemeal' },
-  { id: 'n11', name: 'Ham Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🥪', desc: 'Wholemeal' },
-  { id: 'n12', name: 'Chicken Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🥪', desc: 'Wholemeal' },
-  { id: 'n13', name: 'Tuna Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🐟', desc: 'Wholemeal' },
-  { id: 'n14', name: 'Nuggets', price: 1.00, category: 'Hot Food', emoji: '🍗' },
-  { id: 'n15', name: 'Chicken Tenders', price: 2.00, category: 'Hot Food', emoji: '🍗' },
-  { id: 'n16', name: 'Small Pie', price: 1.00, category: 'Hot Food', emoji: '🥧' },
-  { id: 'n17', name: 'Cheese & Bacon Roll', price: 2.00, category: 'Recess & Snacks', emoji: '🥖' },
-  { id: 'n18', name: 'Spagetti', price: 6.00, category: 'Hot Food', emoji: '🍝' },
-  { id: 'n19', name: 'Slushy', price: 2.00, category: 'Drinks & Frozen', emoji: '🥤' },
-  { id: 'n20', name: 'Chicken Burger', price: 6.00, category: 'Hot Food', emoji: '🍔' },
-  { id: 'n21', name: 'Chicken Wrap', price: 6.00, category: 'Hot Food', emoji: '🌯' },
-];
-
-export default function App() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [cart, setCart] = useState([]);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [orderHistory, setOrderHistory] = useState([]);
-  
-  // Customer details
-  const [studentName, setStudentName] = useState("");
-  const [studentClass, setStudentClass] = useState("");
-
-  // Derived state
-  const filteredItems = useMemo(() => {
-    if (activeCategory === "All") return MENU_ITEMS;
-    return MENU_ITEMS.filter(item => item.category === activeCategory);
-  }, [activeCategory]);
-
-  const cartTotal = useMemo(() => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  }, [cart]);
-
-  const cartItemCount = useMemo(() => {
-    return cart.reduce((count, item) => count + item.quantity, 0);
-  }, [cart]);
-
-  // Cart actions
-  const addToCart = (item) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (itemId) => {
-    setCart(prev => prev.filter(item => item.id !== itemId));
-  };
-
-  const updateQuantity = (itemId, delta) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const newQty = item.quantity + delta;
-        return newQty > 0 ? { ...item, quantity: newQty } : item;
-      }
-      return item;
-    }).filter(item => item.quantity > 0));
-  };
-
-  const handlePlaceOrder = (e) => {
-    e.preventDefault();
-    if (!studentName.trim()) {
-      alert("Please enter a name for the order.");
-      return;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTK Kids Canteen App</title>
     
-    // Create an order record with the current date and time
-    const newOrder = {
-      id: Date.now(),
-      date: new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }),
-      studentName,
-      studentClass,
-      items: [...cart],
-      total: cartTotal
-    };
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    // Save to history (newest first)
-    setOrderHistory(prev => [newOrder, ...prev]);
-    setOrderPlaced(true);
-  };
+    <!-- React & ReactDOM (Loaded via CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (Compiles React JSX inside the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  const resetApp = () => {
-    setCart([]);
-    setStudentName("");
-    setStudentClass("");
-    setIsCheckingOut(false);
-    setOrderPlaced(false);
-    setShowHistory(false);
-    setActiveCategory("All");
-  };
+    <style>
+        body { font-family: sans-serif; background-color: #f8fafc; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-  // --- Success Screen ---
-  if (orderPlaced) {
-    return (
-      <div className="min-h-screen bg-emerald-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
-          <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto mb-4" />
-          <h2 className="text-3xl font-black text-slate-800 mb-2">Order Received!</h2>
-          <p className="text-slate-600 mb-6">
-            Thanks, <strong>{studentName}</strong>! Your canteen order has been placed and paid for.
-          </p>
-          <div className="bg-slate-50 rounded-xl p-4 mb-8 text-left border border-slate-100">
-            <h3 className="font-bold text-slate-700 border-b pb-2 mb-2">Receipt</h3>
-            {cart.map(item => (
-              <div key={item.id} className="flex justify-between text-sm text-slate-600 py-1">
-                <span>{item.quantity}x {item.name}</span>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between font-bold text-slate-800 border-t pt-2 mt-2">
-              <span>Total Paid</span>
-              <span>${cartTotal.toFixed(2)}</span>
-            </div>
-          </div>
-          <button 
-            onClick={resetApp}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95"
-          >
-            Start New Order
-          </button>
-        </div>
-      </div>
-    );
-  }
+    <script type="text/babel" data-type="module">
+        const { useState, useMemo } = React;
 
-  // --- Order History Screen ---
-  if (showHistory) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col max-w-2xl mx-auto shadow-2xl relative">
-        <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 flex items-center shadow-sm">
-          <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors mr-2">
-            <ArrowLeft className="w-6 h-6 text-slate-700" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-800 flex-1">Order History</h1>
-        </header>
+        // Inline Icons
+        const ShoppingCart = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>;
+        const Plus = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
+        const Minus = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/></svg>;
+        const Trash2 = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
+        const ArrowLeft = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
+        const User = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const CheckCircle2 = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+        const GraduationCap = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.42 10.922a2 2 0 0 0-.019-3.838L12.83 4.34a2 2 0 0 0-1.66 0L2.6 7.08a2 2 0 0 0 0 3.84l9.36 4.34a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>;
+        const Utensils = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
+        const Clock = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const Receipt = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>;
 
-        <div className="flex-1 overflow-y-auto p-4 pb-12 space-y-4">
-          {orderHistory.length === 0 ? (
-            <div className="text-center py-12 px-4">
-              <Receipt className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-600 mb-2">No Past Orders</h2>
-              <p className="text-slate-500">Orders you place will appear here so you can review what you bought and when.</p>
-            </div>
-          ) : (
-            orderHistory.map(order => (
-              <div key={order.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex justify-between items-start border-b border-slate-100 pb-3 mb-3">
-                  <div>
-                    <div className="font-black text-slate-800">{order.date}</div>
-                    <div className="text-sm text-slate-500 mt-1">
-                      Student: <span className="font-semibold text-slate-700">{order.studentName}</span> {order.studentClass && `(${order.studentClass})`}
-                    </div>
-                  </div>
-                  <div className="text-lg font-black text-emerald-600">
-                    ${order.total.toFixed(2)}
-                  </div>
-                </div>
-                
-                <ul className="space-y-2">
-                  {order.items.map(item => (
-                    <li key={item.id} className="flex items-center gap-3 text-sm">
-                      <span className="w-6 h-6 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-600">{item.quantity}</span>
-                      <span className="flex-1 font-medium text-slate-700">{item.name}</span>
-                      <span className="text-slate-500">${(item.price * item.quantity).toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    );
-  }
+        const MENU_CATEGORIES = ["All", "Hot Food", "Recess & Snacks", "Sandwiches & Salads", "Drinks & Frozen", "Combos & Specials"];
 
-  // --- Checkout Screen ---
-  if (isCheckingOut) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col max-w-2xl mx-auto shadow-2xl relative">
-        <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 flex items-center shadow-sm">
-          <button onClick={() => setIsCheckingOut(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors mr-2">
-            <ArrowLeft className="w-6 h-6 text-slate-700" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-800 flex-1">Complete Order</h1>
-        </header>
+        const MENU_ITEMS = [
+          { id: 'v1', name: 'Beef Patties Cheese Burger', price: 6.00, category: 'Hot Food', emoji: '🍔', desc: 'Double beef patties and cheese' },
+          { id: 'v2', name: 'Cheese Toasties', price: 3.00, category: 'Recess & Snacks', emoji: '🥪', desc: 'Warm melted cheese sandwich' },
+          { id: 'v3', name: '5 Chicken Fingers & 6 Potato Gems', price: 6.00, category: 'Combos & Specials', emoji: '🍗', desc: 'Crispy chicken and potato gems' },
+          { id: 'v4', name: 'Pizza Pockets', price: 3.50, category: 'Hot Food', emoji: '🍕', desc: 'Ham or Ham & Pineapple' },
+          { id: 'v5', name: 'Fish Fillets & 6 Potato Gems', price: 6.00, category: 'Combos & Specials', emoji: '🐟', desc: 'Crumbed fish fillets with gems' },
+          { id: 'v6', name: '4 Fish Fingers & 6 Potato Gems', price: 5.00, category: 'Combos & Specials', emoji: '🍟', desc: 'Perfect kid-sized fish meal' },
+          { id: 't1', name: 'Hot Dog', price: 5.00, category: 'Hot Food', emoji: '🌭' },
+          { id: 't2', name: 'Sausage Roll', price: 5.50, category: 'Hot Food', emoji: '🥐' },
+          { id: 't3', name: 'Large Pie', price: 5.50, category: 'Hot Food', emoji: '🥧' },
+          { id: 't4', name: 'Macaroni and Cheese', price: 6.00, category: 'Hot Food', emoji: '🧀' },
+          { id: 't5', name: 'Lasagne', price: 6.00, category: 'Hot Food', emoji: '🍝' },
+          { id: 't6', name: 'Hash Brown', price: 1.00, category: 'Recess & Snacks', emoji: '🥔' },
+          { id: 't7', name: 'Garlic Bread', price: 1.00, category: 'Recess & Snacks', emoji: '🥖' },
+          { id: 't8', name: 'PopCorn', price: 2.00, category: 'Recess & Snacks', emoji: '🍿' },
+          { id: 't9', name: 'Red Rock Deli Chips', price: 2.00, category: 'Recess & Snacks', emoji: '🥨' },
+          { id: 't10', name: 'Water 600ml', price: 2.00, category: 'Drinks & Frozen', emoji: '💧' },
+          { id: 't11', name: 'Flavoured Milk 250ml', price: 2.50, category: 'Drinks & Frozen', emoji: '🥛' },
+          { id: 't12', name: 'Juice Assorted 200ml', price: 2.50, category: 'Drinks & Frozen', emoji: '🧃' },
+          { id: 't13', name: 'Zooper Doopers', price: 1.00, category: 'Drinks & Frozen', emoji: '🧊' },
+          { id: 't14', name: 'Salad Box', price: 6.00, category: 'Sandwiches & Salads', emoji: '🥗', desc: 'Lettuce, cucumber, carrot, tomato' },
+          { id: 't15', name: 'Vegemite Sandwich', price: 3.00, category: 'Sandwiches & Salads', emoji: '🍞' },
+          { id: 't16', name: 'MONDAY Special', price: 7.50, category: 'Combos & Specials', emoji: '🍕', desc: 'Pizza and Water' },
+          { id: 't17', name: 'FRIDAY Special', price: 5.50, category: 'Combos & Specials', emoji: '🍗', desc: 'Nuggets (4) and Water' },
+          { id: 'n1', name: 'Hot Noodles (Chicken/Beef)', price: 4.00, category: 'Hot Food', emoji: '🍜', desc: 'Note: water drained from noodles' },
+          { id: 'n2', name: 'Juice Cups', price: 2.00, category: 'Drinks & Frozen', emoji: '🧃' },
+          { id: 'n3', name: 'Jelly Sticks', price: 0.20, category: 'Drinks & Frozen', emoji: '🧊' },
+          { id: 'n4', name: 'Fruit Puddings', price: 0.60, category: 'Drinks & Frozen', emoji: '🍮' },
+          { id: 'n5', name: 'Moosies', price: 2.00, category: 'Drinks & Frozen', emoji: '🐮' },
+          { id: 'n6', name: 'Ice Cream Cups 99% Fat Free', price: 2.00, category: 'Drinks & Frozen', emoji: '🍨' },
+          { id: 'n7', name: 'Juiceys', price: 2.00, category: 'Drinks & Frozen', emoji: '🧊' },
+          { id: 'n8', name: 'Butter Sandwich', price: 2.00, category: 'Sandwiches & Salads', emoji: '🍞', desc: 'Wholemeal' },
+          { id: 'n9', name: 'Cheese Sandwich', price: 3.00, category: 'Sandwiches & Salads', emoji: '🧀', desc: 'Wholemeal' },
+          { id: 'n10', name: 'Salad Sandwich', price: 6.00, category: 'Sandwiches & Salads', emoji: '🥗', desc: 'Wholemeal' },
+          { id: 'n11', name: 'Ham Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🥪', desc: 'Wholemeal' },
+          { id: 'n12', name: 'Chicken Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🥪', desc: 'Wholemeal' },
+          { id: 'n13', name: 'Tuna Sandwich', price: 5.00, category: 'Sandwiches & Salads', emoji: '🐟', desc: 'Wholemeal' },
+          { id: 'n14', name: 'Nuggets', price: 1.00, category: 'Hot Food', emoji: '🍗' },
+          { id: 'n15', name: 'Chicken Tenders', price: 2.00, category: 'Hot Food', emoji: '🍗' },
+          { id: 'n16', name: 'Small Pie', price: 1.00, category: 'Hot Food', emoji: '🥧' },
+          { id: 'n17', name: 'Cheese & Bacon Roll', price: 2.00, category: 'Recess & Snacks', emoji: '🥖' },
+          { id: 'n18', name: 'Spagetti', price: 6.00, category: 'Hot Food', emoji: '🍝' },
+          { id: 'n19', name: 'Slushy', price: 2.00, category: 'Drinks & Frozen', emoji: '🥤' },
+          { id: 'n20', name: 'Chicken Burger', price: 6.00, category: 'Hot Food', emoji: '🍔' },
+          { id: 'n21', name: 'Chicken Wrap', price: 6.00, category: 'Hot Food', emoji: '🌯' }
+        ];
 
-        <div className="flex-1 overflow-y-auto p-4 pb-32">
-          {/* Order Summary */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-emerald-600" /> Your Cart
-            </h2>
+        function App() {
+          const [activeCategory, setActiveCategory] = useState("All");
+          const [cart, setCart] = useState([]);
+          const [isCheckingOut, setIsCheckingOut] = useState(false);
+          const [orderPlaced, setOrderPlaced] = useState(false);
+          const [showHistory, setShowHistory] = useState(false);
+          const [orderHistory, setOrderHistory] = useState([]);
+          const [studentName, setStudentName] = useState("");
+          const [studentClass, setStudentClass] = useState("");
+
+          const filteredItems = useMemo(() => {
+            if (activeCategory === "All") return MENU_ITEMS;
+            return MENU_ITEMS.filter(item => item.category === activeCategory);
+          }, [activeCategory]);
+
+          const cartTotal = useMemo(() => {
+            return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+          }, [cart]);
+
+          const cartItemCount = useMemo(() => {
+            return cart.reduce((count, item) => count + item.quantity, 0);
+          }, [cart]);
+
+          const addToCart = (item) => {
+            setCart(prev => {
+              const existing = prev.find(i => i.id === item.id);
+              if (existing) {
+                return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+              }
+              return [...prev, { ...item, quantity: 1 }];
+            });
+          };
+
+          const removeFromCart = (itemId) => {
+            setCart(prev => prev.filter(item => item.id !== itemId));
+          };
+
+          const updateQuantity = (itemId, delta) => {
+            setCart(prev => prev.map(item => {
+              if (item.id === itemId) {
+                const newQty = item.quantity + delta;
+                return newQty > 0 ? { ...item, quantity: newQty } : item;
+              }
+              return item;
+            }).filter(item => item.quantity > 0));
+          };
+
+          const handlePlaceOrder = (e) => {
+            e.preventDefault();
+            if (!studentName.trim()) {
+              alert("Please enter a name for the order.");
+              return;
+            }
             
-            {cart.length === 0 ? (
-              <p className="text-slate-500 text-center py-4">Your cart is empty.</p>
-            ) : (
-              <div className="space-y-4">
-                {cart.map(item => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl">
-                      {item.emoji}
+            const newOrder = {
+              id: Date.now(),
+              date: new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }),
+              studentName,
+              studentClass,
+              items: [...cart],
+              total: cartTotal
+            };
+            
+            setOrderHistory(prev => [newOrder, ...prev]);
+            setOrderPlaced(true);
+          };
+
+          const resetApp = () => {
+            setCart([]);
+            setStudentName("");
+            setStudentClass("");
+            setIsCheckingOut(false);
+            setOrderPlaced(false);
+            setShowHistory(false);
+            setActiveCategory("All");
+          };
+
+          if (orderPlaced) {
+            return (
+              <div className="min-h-screen bg-emerald-50 flex flex-col items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+                  <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto mb-4" />
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">Order Received!</h2>
+                  <p className="text-slate-600 mb-6">Thanks, <strong>{studentName}</strong>! Your canteen order has been placed.</p>
+                  <div className="bg-slate-50 rounded-xl p-4 mb-8 text-left border border-slate-100">
+                    <h3 className="font-bold text-slate-700 border-b pb-2 mb-2">Receipt</h3>
+                    {cart.map(item => (
+                      <div key={item.id} className="flex justify-between text-sm text-slate-600 py-1">
+                        <span>{item.quantity}x {item.name}</span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between font-bold text-slate-800 border-t pt-2 mt-2">
+                      <span>Total Paid</span>
+                      <span>${cartTotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-slate-800 leading-tight">{item.name}</h4>
-                      <p className="text-emerald-600 font-bold">${item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-white rounded shadow-sm text-slate-600 transition-colors">
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-8 text-center font-semibold text-slate-800">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-white rounded shadow-sm text-slate-600 transition-colors">
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors ml-1">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
                   </div>
-                ))}
-                
-                <div className="border-t border-slate-100 pt-4 mt-4 flex justify-between items-end">
-                  <span className="text-slate-500 font-medium">Total Amount</span>
-                  <span className="text-3xl font-black text-emerald-600">${cartTotal.toFixed(2)}</span>
+                  <button onClick={resetApp} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-md active:scale-95">Start New Order</button>
                 </div>
               </div>
-            )}
-          </section>
+            );
+          }
 
-          {/* Customer Details Form */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Student Details</h2>
-            <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Student Name *</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    required
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    placeholder="e.g. John Smith" 
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                  />
+          if (showHistory) {
+            return (
+              <div className="min-h-screen bg-slate-50 flex flex-col max-w-2xl mx-auto shadow-2xl relative">
+                <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 flex items-center shadow-sm">
+                  <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-slate-100 rounded-full mr-2"><ArrowLeft className="w-6 h-6 text-slate-700" /></button>
+                  <h1 className="text-xl font-bold text-slate-800 flex-1">Order History</h1>
+                </header>
+                <div className="flex-1 overflow-y-auto p-4 pb-12 space-y-4">
+                  {orderHistory.length === 0 ? (
+                    <div className="text-center py-12 px-4">
+                      <Receipt className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                      <h2 className="text-xl font-bold text-slate-600 mb-2">No Past Orders</h2>
+                    </div>
+                  ) : (
+                    orderHistory.map(order => (
+                      <div key={order.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                        <div className="flex justify-between items-start border-b border-slate-100 pb-3 mb-3">
+                          <div>
+                            <div className="font-black text-slate-800">{order.date}</div>
+                            <div className="text-sm text-slate-500 mt-1">Student: <span className="font-semibold text-slate-700">{order.studentName}</span></div>
+                          </div>
+                          <div className="text-lg font-black text-emerald-600">${order.total.toFixed(2)}</div>
+                        </div>
+                        <ul className="space-y-2">
+                          {order.items.map(item => (
+                            <li key={item.id} className="flex items-center gap-3 text-sm">
+                              <span className="w-6 h-6 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-600">{item.quantity}</span>
+                              <span className="flex-1 font-medium text-slate-700">{item.name}</span>
+                              <span className="text-slate-500">${(item.price * item.quantity).toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Class / Room (Optional)</label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    value={studentClass}
-                    onChange={(e) => setStudentClass(e.target.value)}
-                    placeholder="e.g. 4B" 
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                  />
+            );
+          }
+
+          if (isCheckingOut) {
+            return (
+              <div className="min-h-screen bg-slate-50 flex flex-col max-w-2xl mx-auto shadow-2xl relative">
+                <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 flex items-center shadow-sm">
+                  <button onClick={() => setIsCheckingOut(false)} className="p-2 hover:bg-slate-100 rounded-full mr-2"><ArrowLeft className="w-6 h-6 text-slate-700" /></button>
+                  <h1 className="text-xl font-bold text-slate-800 flex-1">Complete Order</h1>
+                </header>
+                <div className="flex-1 overflow-y-auto p-4 pb-32">
+                  <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><ShoppingCart className="w-5 h-5 text-emerald-600" /> Your Cart</h2>
+                    {cart.length === 0 ? <p className="text-slate-500 text-center py-4">Your cart is empty.</p> : (
+                      <div className="space-y-4">
+                        {cart.map(item => (
+                          <div key={item.id} className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl">{item.emoji}</div>
+                            <div className="flex-1"><h4 className="font-semibold text-slate-800">{item.name}</h4><p className="text-emerald-600 font-bold">${item.price.toFixed(2)}</p></div>
+                            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                              <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-white rounded shadow-sm text-slate-600"><Minus className="w-4 h-4" /></button>
+                              <span className="w-8 text-center font-semibold text-slate-800">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-white rounded shadow-sm text-slate-600"><Plus className="w-4 h-4" /></button>
+                            </div>
+                            <button onClick={() => removeFromCart(item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg ml-1"><Trash2 className="w-5 h-5" /></button>
+                          </div>
+                        ))}
+                        <div className="border-t border-slate-100 pt-4 mt-4 flex justify-between items-end">
+                          <span className="text-slate-500 font-medium">Total</span>
+                          <span className="text-3xl font-black text-emerald-600">${cartTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                  <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+                    <h2 className="text-lg font-bold text-slate-800 mb-4">Student Details</h2>
+                    <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Student Name *</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                          <input type="text" required value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Class / Room (Optional)</label>
+                        <div className="relative">
+                          <GraduationCap className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                          <input type="text" value={studentClass} onChange={(e) => setStudentClass(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none" />
+                        </div>
+                      </div>
+                    </form>
+                  </section>
                 </div>
-              </div>
-            </form>
-          </section>
-        </div>
-
-        {/* Bottom Checkout Bar */}
-        <div className="fixed bottom-0 w-full max-w-2xl bg-white border-t p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-          <button 
-            type="submit"
-            form="checkout-form"
-            disabled={cart.length === 0}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95 flex justify-center items-center gap-2 text-lg"
-          >
-            Pay & Place Order <span>${cartTotal.toFixed(2)}</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Main Menu Screen ---
-  return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans max-w-2xl mx-auto shadow-2xl relative">
-      
-      {/* Header */}
-      <header className="bg-emerald-700 text-white p-6 rounded-b-[2.5rem] shadow-md relative overflow-hidden flex justify-between items-start">
-        <div className="absolute -right-10 -top-10 opacity-10 pointer-events-none">
-          <Utensils className="w-48 h-48" />
-        </div>
-        <div className="relative z-10">
-          <p className="text-emerald-200 font-bold tracking-widest text-xs uppercase mb-1">CTK Kids Catering</p>
-          <h1 className="text-3xl font-black">Canteen Menu</h1>
-          <p className="text-emerald-100 mt-2 text-sm max-w-[250px]">Fresh, healthy, and delicious meals for growing minds.</p>
-        </div>
-        <button 
-          onClick={() => setShowHistory(true)} 
-          className="relative z-10 bg-white/20 hover:bg-white/30 active:scale-95 p-3 rounded-2xl backdrop-blur-sm transition-all shadow-sm"
-          title="View Order History"
-        >
-          <Clock className="w-6 h-6 text-white" />
-        </button>
-      </header>
-
-      {/* Category Horizontal Scroll */}
-      <div className="mt-6 px-4">
-        <div className="flex overflow-x-auto pb-4 gap-3 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {MENU_CATEGORIES.map(category => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm transition-all shadow-sm ${
-                activeCategory === category 
-                ? 'bg-emerald-600 text-white shadow-emerald-200 border-transparent' 
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Menu Grid */}
-      <div className="px-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {filteredItems.map(item => {
-          const inCart = cart.find(i => i.id === item.id);
-          return (
-            <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex gap-4">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-4xl shadow-inner">
-                  {item.emoji}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-slate-800 leading-tight">{item.name}</h3>
-                  {item.desc && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{item.desc}</p>}
-                  <div className="text-emerald-600 font-black mt-2">${item.price.toFixed(2)}</div>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex items-center justify-end">
-                {inCart ? (
-                  <div className="flex items-center bg-slate-100 rounded-xl p-1 w-full justify-between">
-                    <button onClick={() => updateQuantity(item.id, -1)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-colors">
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    <span className="font-bold text-slate-800">{inCart.quantity} in order</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} className="p-2 bg-white rounded-lg shadow-sm text-emerald-600 transition-colors">
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <button 
-                    onClick={() => addToCart(item)}
-                    className="bg-slate-50 hover:bg-emerald-50 text-emerald-700 border border-slate-200 hover:border-emerald-200 font-bold py-2.5 px-4 rounded-xl transition-all w-full flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Add to Order
+                <div className="fixed bottom-0 w-full max-w-2xl bg-white border-t p-4">
+                  <button type="submit" form="checkout-form" disabled={cart.length === 0} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-md active:scale-95 flex justify-center items-center gap-2 text-lg">
+                    Pay & Place Order <span>${cartTotal.toFixed(2)}</span>
                   </button>
-                )}
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            );
+          }
 
-      {/* Floating View Cart Button */}
-      {cartItemCount > 0 && (
-        <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none">
-          <button 
-            onClick={() => setIsCheckingOut(true)}
-            className="w-full max-w-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-xl p-4 flex items-center justify-between pointer-events-auto transition-transform hover:-translate-y-1 active:scale-95"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 px-3 py-1 rounded-lg font-black text-sm">
-                {cartItemCount} items
+          return (
+            <div className="min-h-screen bg-slate-50 pb-24 font-sans max-w-2xl mx-auto shadow-2xl relative">
+              <header className="bg-emerald-700 text-white p-6 rounded-b-[2.5rem] shadow-md relative overflow-hidden flex justify-between items-start">
+                <div className="absolute -right-10 -top-10 opacity-10 pointer-events-none"><Utensils className="w-48 h-48" /></div>
+                <div className="relative z-10">
+                  <p className="text-emerald-200 font-bold tracking-widest text-xs uppercase mb-1">CTK Kids Catering</p>
+                  <h1 className="text-3xl font-black">Canteen Menu</h1>
+                </div>
+                <button onClick={() => setShowHistory(true)} className="relative z-10 bg-white/20 hover:bg-white/30 active:scale-95 p-3 rounded-2xl backdrop-blur-sm shadow-sm" title="View Order History"><Clock className="w-6 h-6 text-white" /></button>
+              </header>
+              <div className="mt-6 px-4">
+                <div className="flex overflow-x-auto pb-4 gap-3 scrollbar-hide">
+                  {MENU_CATEGORIES.map(category => (
+                    <button key={category} onClick={() => setActiveCategory(category)} className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold text-sm shadow-sm ${activeCategory === category ? 'bg-emerald-600 text-white border-transparent' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>{category}</button>
+                  ))}
+                </div>
               </div>
-              <span className="font-bold">View Order</span>
+              <div className="px-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filteredItems.map(item => {
+                  const inCart = cart.find(i => i.id === item.id);
+                  return (
+                    <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md">
+                      <div className="flex gap-4">
+                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-4xl shadow-inner">{item.emoji}</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-slate-800 leading-tight">{item.name}</h3>
+                          {item.desc && <p className="text-xs text-slate-500 mt-1">{item.desc}</p>}
+                          <div className="text-emerald-600 font-black mt-2">${item.price.toFixed(2)}</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-end">
+                        {inCart ? (
+                          <div className="flex items-center bg-slate-100 rounded-xl p-1 w-full justify-between">
+                            <button onClick={() => updateQuantity(item.id, -1)} className="p-2 bg-white rounded-lg shadow-sm text-slate-600"><Minus className="w-5 h-5" /></button>
+                            <span className="font-bold text-slate-800">{inCart.quantity} in order</span>
+                            <button onClick={() => updateQuantity(item.id, 1)} className="p-2 bg-white rounded-lg shadow-sm text-emerald-600"><Plus className="w-5 h-5" /></button>
+                          </div>
+                        ) : (
+                          <button onClick={() => addToCart(item)} className="bg-slate-50 hover:bg-emerald-50 text-emerald-700 border border-slate-200 hover:border-emerald-200 font-bold py-2.5 px-4 rounded-xl w-full flex items-center justify-center gap-2"><Plus className="w-4 h-4" /> Add to Order</button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              {cartItemCount > 0 && (
+                <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none">
+                  <button onClick={() => setIsCheckingOut(true)} className="w-full max-w-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-xl p-4 flex items-center justify-between pointer-events-auto active:scale-95">
+                    <div className="flex items-center gap-3"><div className="bg-white/20 px-3 py-1 rounded-lg font-black text-sm">{cartItemCount} items</div><span className="font-bold">View Order</span></div>
+                    <span className="font-black text-lg">${cartTotal.toFixed(2)}</span>
+                  </button>
+                </div>
+              )}
             </div>
-            <span className="font-black text-lg">${cartTotal.toFixed(2)}</span>
-          </button>
-        </div>
-      )}
-      
-    </div>
-  );
-}
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
